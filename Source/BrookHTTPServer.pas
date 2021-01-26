@@ -6,7 +6,7 @@
  *
  * Microframework which helps to develop web Pascal applications.
  *
- * Copyright (c) 2012-2020 Silvio Clecio <silvioprog@gmail.com>
+ * Copyright (c) 2012-2021 Silvio Clecio <silvioprog@gmail.com>
  *
  * Brook framework is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -76,7 +76,7 @@ type
     { Clears the common TLS properties. }
     procedure Clear; virtual;
     { Validates the common TLS properties. }
-    procedure Validate; inline;
+    procedure Validate; {$IFNDEF DEBUG}inline;{$ENDIF}
   published
     { Activates the TLS support. }
     property Active: Boolean read FActive write FActive stored IsActiveStored;
@@ -181,10 +181,11 @@ type
     procedure SetThreaded(AValue: Boolean);
     procedure SetThreadPoolSize(AValue: Cardinal);
     procedure SetUploadsDir(const AValue: string);
-    procedure InternalCreateServerHandle; inline;
-    procedure InternalFreeServerHandle; inline;
-    procedure InternalShutdownServer; inline;
-    procedure InternalCheckServerOption(Aret: cint); inline;
+    procedure InternalCreateServerHandle; {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure InternalFreeServerHandle; {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure InternalShutdownServer; {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure InternalCheckServerOption(Aret: cint);
+{$IFNDEF DEBUG}inline;{$ENDIF}
     procedure InternalLibUnloadEvent(ASender: TObject);
   protected
     class function DoAuthenticationCallback(Acls: Pcvoid; Aauth: Psg_httpauth;
@@ -226,7 +227,7 @@ type
       AResponse: TBrookHTTPResponse; AException: Exception); virtual;
     procedure DoClientConnection(ASender: TObject; const AClient: Pointer;
       var AClosed: Boolean); virtual;
-    procedure CheckInactive; inline;
+    procedure CheckInactive; {$IFNDEF DEBUG}inline;{$ENDIF}
     procedure SetActive(AValue: Boolean); virtual;
     procedure DoOpen; virtual;
     procedure DoClose; virtual;
@@ -472,7 +473,11 @@ begin
     if VSrv.FNoFavicon and VReq.IsFavicon then
       VRes.SendEmpty
     else
+    begin
       VSrv.HandleRequest(VReq, VRes);
+      if VRes.IsEmpty then
+        VRes.SendEmpty;
+    end;
   finally
     VRes.Free;
     VReq.Free;

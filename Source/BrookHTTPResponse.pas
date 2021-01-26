@@ -6,7 +6,7 @@
  *
  * Microframework which helps to develop web Pascal applications.
  *
- * Copyright (c) 2012-2020 Silvio Clecio <silvioprog@gmail.com>
+ * Copyright (c) 2012-2021 Silvio Clecio <silvioprog@gmail.com>
  *
  * Brook framework is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -68,13 +68,15 @@ type
     class function DoStreamRead(Acls: Pcvoid; Aoffset: cuint64_t; Abuf: Pcchar;
       Asize: csize_t): cssize_t; cdecl; static;
     class procedure DoStreamFree(Acls: Pcvoid); cdecl; static;
-    class procedure CheckStatus(AStatus: Word); static; inline;
-    class procedure CheckStream(AStream: TStream); static; inline;
+    class procedure CheckStatus(AStatus: Word); static;
+{$IFNDEF DEBUG}inline;{$ENDIF}
+    class procedure CheckStream(AStream: TStream); static;
+{$IFNDEF DEBUG}inline;{$ENDIF}
     function CreateHeaders(AHandle: Pointer): TBrookStringMap; virtual;
     function CreateCookies(AOwner: TPersistent): TBrookHTTPCookies; virtual;
     function GetHandle: Pointer; override;
-    procedure CheckAlreadySent(Aret: cint); inline;
-    procedure CheckZLib(Aret: cint); inline;
+    procedure CheckAlreadySent(Aret: cint); {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure CheckZLib(Aret: cint); {$IFNDEF DEBUG}inline;{$ENDIF}
   public
     { Creates an instance of @code(TBrookHTTPResponse).
       @param(AHandle[in] Request handle.) }
@@ -175,6 +177,8 @@ type
     { Clears all headers, cookies, statuses and internal buffers of the response
       object. }
     procedure Clear; virtual;
+    { Checks if the response is empty. }
+    function IsEmpty: Boolean;
     { Determines if the content must be compressed while sending.
       The compression is done by the ZLib library using the DEFLATE compression
       algorithm. It uses the Gzip format when the content is a file. }
@@ -183,6 +187,8 @@ type
     property Headers: TBrookStringMap read FHeaders;
     { Cookies to be sent to the client. }
     property Cookies: TBrookHTTPCookies read FCookies write SetCookies;
+    { Determines if the response is empty. }
+    property Empty: Boolean read IsEmpty;
   end;
 
 implementation
@@ -295,6 +301,7 @@ var
   M: TMarshaller;
   R: cint;
 begin
+  SgLib.Check;
   if FCompressed then
   begin
     R := sg_httpres_zsendbinary(FHandle, M.ToCString(AValue), Length(AValue),
@@ -373,6 +380,8 @@ var
 begin
   CheckStream(AStream);
   CheckStatus(AStatus);
+  if AFreed and (not SgLib.IsLoaded) then
+    AStream.Free;
   SgLib.Check;
   if AFreed then
     FCb := DoStreamFree
@@ -475,6 +484,12 @@ procedure TBrookHTTPResponse.Clear;
 begin
   SgLib.Check;
   SgLib.CheckLastError(sg_httpres_clear(FHandle));
+end;
+
+function TBrookHTTPResponse.IsEmpty: Boolean;
+begin
+  SgLib.Check;
+  Result := sg_httpres_is_empty(FHandle);
 end;
 
 end.

@@ -6,7 +6,7 @@
  *
  * Microframework which helps to develop web Pascal applications.
  *
- * Copyright (c) 2012-2020 Silvio Clecio <silvioprog@gmail.com>
+ * Copyright (c) 2012-2021 Silvio Clecio <silvioprog@gmail.com>
  *
  * Brook framework is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -76,7 +76,7 @@ type
     procedure edPortChange(Sender: TObject);
     procedure edPortChangeTracking(Sender: TObject);
   public
-    procedure UpdateControls; inline;
+    procedure UpdateControls; {$IFNDEF DEBUG}inline;{$ENDIF}
   end;
 
 const

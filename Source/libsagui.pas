@@ -7,7 +7,7 @@
  *
  * Cross-platform library which helps to develop web servers or frameworks.
  *
- * Copyright (c) 2012-2020 Silvio Clecio <silvioprog@gmail.com>
+ * Copyright (c) 2012-2021 Silvio Clecio <silvioprog@gmail.com>
  *
  * Brook framework is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,7 +41,7 @@ uses
   StrUtils,
   Math,
   Classes,
-  Contnrs,
+  Generics.Collections,
 {$IFDEF MSWINDOWS}
   Windows,
 {$ENDIF}
@@ -60,9 +60,9 @@ type
 const
   SG_VERSION_MAJOR = 3;
 
-  SG_VERSION_MINOR = 1;
+  SG_VERSION_MINOR = 2;
 
-  SG_VERSION_PATCH = 3;
+  SG_VERSION_PATCH = 2;
 
   SG_VERSION_HEX = (SG_VERSION_MAJOR shl 16) or (SG_VERSION_MINOR shl 8) or
     SG_VERSION_PATCH;
@@ -371,17 +371,18 @@ var
     const val: Pcchar): cint; cdecl;
 
 function sg_httpres_send(res: Psg_httpres; const val: Pcchar;
-  const content_type: Pcchar; status: cuint): cint; inline;
+  const content_type: Pcchar; status: cuint): cint;
+{$IFNDEF DEBUG}inline;{$ENDIF}
 
 var
   sg_httpres_sendbinary: function(res: Psg_httpres; buf: Pcvoid; size: csize_t;
     const content_type: Pcchar; status: cuint): cint; cdecl;
 
 function sg_httpres_download(res: Psg_httpres;
-  const filename: Pcchar; status: cuint): cint; inline;
+  const filename: Pcchar; status: cuint): cint; {$IFNDEF DEBUG}inline;{$ENDIF}
 
 function sg_httpres_render(res: Psg_httpres;
-  const filename: Pcchar; status: cuint): cint; inline;
+  const filename: Pcchar; status: cuint): cint; {$IFNDEF DEBUG}inline;{$ENDIF}
 
 var
   sg_httpres_sendfile2: function(res: Psg_httpres; size: cuint64_t;
@@ -397,7 +398,8 @@ var
     status: cuint): cint; cdecl;
 
 function sg_httpres_zsend(res: Psg_httpres; const val: Pcchar;
-  const content_type: Pcchar; status: cuint): cint; inline;
+  const content_type: Pcchar; status: cuint): cint;
+{$IFNDEF DEBUG}inline;{$ENDIF}
 
 var
   sg_httpres_zsendbinary2: function(res: Psg_httpres; level: cint; buf: Pcvoid;
@@ -414,10 +416,10 @@ var
     handle: Pcvoid; free_cb: sg_free_cb; status: cuint): cint; cdecl;
 
 function sg_httpres_zdownload(res: Psg_httpres;
-  const filename: Pcchar; status: cuint): cint; inline;
+  const filename: Pcchar; status: cuint): cint; {$IFNDEF DEBUG}inline;{$ENDIF}
 
 function sg_httpres_zrender(res: Psg_httpres;
-  const filename: Pcchar; status: cuint): cint; inline;
+  const filename: Pcchar; status: cuint): cint; {$IFNDEF DEBUG}inline;{$ENDIF}
 
 var
   sg_httpres_zsendfile2: function(res: Psg_httpres; level: cint;
@@ -430,6 +432,8 @@ var
     downloaded: cbool; status: cuint): cint; cdecl;
 
   sg_httpres_clear: function(res: Psg_httpres): cint; cdecl;
+
+  sg_httpres_is_empty: function(res: Psg_httpres): cbool; cdecl;
 
 var
   sg_httpsrv_new2: function(auth_cb: sg_httpauth_cb; req_cb: sg_httpreq_cb;
@@ -693,15 +697,27 @@ type
 
   ESgUnloadEvent = class(Exception);
 
+  { TSgLibUnloadHolder }
+
+  TSgLibUnloadHolder = class sealed
+  private
+    FEvent: TNotifyEvent;
+    FSender: TObject;
+  public
+    constructor Create(AEvent: TNotifyEvent; ASender: TObject);
+    property Event: TNotifyEvent read FEvent;
+    property Sender: TObject read FSender;
+  end;
+
   { TSgUnloadEvents }
 
   TSgUnloadEvents = class sealed
   private
     FCS: TCriticalSection;
-    FList: TObjectList;
+    FList: TObjectList<TSgLibUnloadHolder>;
   protected
     property CS: TCriticalSection read FCS;
-    property List: TObjectList read FList;
+    property List: TObjectList<TSgLibUnloadHolder> read FList;
   public
     constructor Create(ACS: TCriticalSection); virtual;
     destructor Destroy; override;
@@ -727,8 +743,10 @@ type
     class procedure Done; static;
     class function GetLastName: string; static;
     class procedure CheckVersion(AVersion: Integer); overload; static;
-    class procedure CheckVersion; overload; static; inline;
-    class procedure CheckLastError(ALastError: Integer); static; inline;
+    class procedure CheckVersion; overload; static;
+{$IFNDEF DEBUG}inline;{$ENDIF}
+    class procedure CheckLastError(ALastError: Integer); static;
+{$IFNDEF DEBUG}inline;{$ENDIF}
     class function Load(const AName: TFileName): TLibHandle; static;
     class function Unload: TLibHandle; static;
     class function IsLoaded: Boolean; static;
@@ -737,13 +755,16 @@ type
     class property Handle: TLibHandle read GHandle;
   end;
 
-function cpow(const X, Y: cdouble): cdouble; cdecl; inline;
+function cpow(const X, Y: cdouble): cdouble; cdecl;
+{$IFNDEF DEBUG}inline;{$ENDIF}
 
-function cfmod(const X, Y: cdouble): cdouble; cdecl; inline;
+function cfmod(const X, Y: cdouble): cdouble; cdecl;
+{$IFNDEF DEBUG}inline;{$ENDIF}
 
 implementation
 
-function SameNotifyEvent(AN1, AN2: TNotifyEvent): Boolean; inline;
+function SameNotifyEvent(AN1, AN2: TNotifyEvent): Boolean;
+{$IFNDEF DEBUG}inline;{$ENDIF}
 begin
   Result := (TMethod(AN1).Code = TMethod(AN2).Code) and
     (TMethod(AN1).Data = TMethod(AN2).Data);
@@ -810,17 +831,6 @@ end;
 
 { TSgLibUnloadHolder }
 
-type
-  TSgLibUnloadHolder = class
-  private
-    FEvent: TNotifyEvent;
-    FSender: TObject;
-  public
-    constructor Create(AEvent: TNotifyEvent; ASender: TObject);
-    property Event: TNotifyEvent read FEvent;
-    property Sender: TObject read FSender;
-  end;
-
 constructor TSgLibUnloadHolder.Create(AEvent: TNotifyEvent;
   ASender: TObject);
 begin
@@ -836,7 +846,7 @@ begin
   inherited Create;
   if not Assigned(ACS) then
     raise EArgumentNilException.CreateFmt(SParamIsNil, ['ACS']);
-  FList := TObjectList.Create;
+  FList := TObjectList<TSgLibUnloadHolder>.Create;
   FCS := ACS;
 end;
 
@@ -1083,6 +1093,7 @@ begin //FI:C101
     sg_httpres_zsendfile2 := GetProcAddress(GHandle, 'sg_httpres_zsendfile2');
     sg_httpres_zsendfile := GetProcAddress(GHandle, 'sg_httpres_zsendfile');
     sg_httpres_clear := GetProcAddress(GHandle, 'sg_httpres_clear');
+    sg_httpres_is_empty := GetProcAddress(GHandle, 'sg_httpres_is_empty');
 
     sg_httpsrv_new2 := GetProcAddress(GHandle, 'sg_httpsrv_new2');
     sg_httpsrv_new := GetProcAddress(GHandle, 'sg_httpsrv_new');
@@ -1282,6 +1293,7 @@ begin //FI:C101
     sg_httpres_zsendfile2 := nil;
     sg_httpres_zsendfile := nil;
     sg_httpres_clear := nil;
+    sg_httpres_is_empty := nil;
 
     sg_httpsrv_new2 := nil;
     sg_httpsrv_new := nil;

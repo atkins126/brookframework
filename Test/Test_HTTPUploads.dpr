@@ -6,7 +6,7 @@
  *
  * Microframework which helps to develop web Pascal applications.
  *
- * Copyright (c) 2012-2020 Silvio Clecio <silvioprog@gmail.com>
+ * Copyright (c) 2012-2021 Silvio Clecio <silvioprog@gmail.com>
  *
  * Brook framework is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -130,7 +130,7 @@ begin
   Result := 0;
 end;
 
-procedure AssignFakeAPI; inline;
+procedure AssignFakeAPI; {$IFNDEF DEBUG}inline;{$ENDIF}
 begin
   sg_httpupld_handle := fake_httpupld_handle;
   sg_httpupld_dir := fake_httpupld_dir;

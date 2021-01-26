@@ -6,7 +6,7 @@
  *
  * Microframework which helps to develop web Pascal applications.
  *
- * Copyright (c) 2012-2020 Silvio Clecio <silvioprog@gmail.com>
+ * Copyright (c) 2012-2021 Silvio Clecio <silvioprog@gmail.com>
  *
  * Brook framework is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -60,11 +60,11 @@ type
     function IsLibraryNameStored: Boolean;
     procedure SetActive(AValue: Boolean);
     procedure SetLibraryName(const AValue: TFileName);
-    procedure InternalOpen; inline;
+    procedure InternalOpen; {$IFNDEF DEBUG}inline;{$ENDIF}
     procedure InternalLibUnloadEvent(ASender: TObject);
   protected
     procedure Loaded; override;
-    procedure CheckInactive; inline;
+    procedure CheckInactive; {$IFNDEF DEBUG}inline;{$ENDIF}
     function GetHandle: Pointer; override;
   public
     { Creates an instance of @code(TBrookLibraryLoader).

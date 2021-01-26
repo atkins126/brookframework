@@ -6,7 +6,7 @@
  *
  * Microframework which helps to develop web Pascal applications.
  *
- * Copyright (c) 2012-2020 Silvio Clecio <silvioprog@gmail.com>
+ * Copyright (c) 2012-2021 Silvio Clecio <silvioprog@gmail.com>
  *
  * Brook framework is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -91,17 +91,17 @@ type
     function CreateCache: TBrookStringMap; virtual;
     function IsPrepared: Boolean; virtual; abstract;
     function GetHandle: Pointer; override;
-    procedure CheckExt(const AExt: string); inline;
-    procedure CheckType(const AType: string); inline;
-    procedure CheckPrepared; inline;
+    procedure CheckExt(const AExt: string); {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure CheckType(const AType: string); {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure CheckPrepared; {$IFNDEF DEBUG}inline;{$ENDIF}
     property Cache: TBrookStringMap read FCache;
   public
     { Creates an instance of @code(TBrookMediaTypes). }
     constructor Create; virtual;
     { Destroys an instance of @code(TBrookMediaTypes). }
     destructor Destroy; override;
-    { Returns the alias name for class registration.
-      @returns(Registration alias name.) }
+    { Returns the alias name for media type source.
+      @returns(Media type source alias.) }
     class function GetRegisterAlias: string; virtual;
     { Returns the description of the media types source.
       @returns(Description of the media types source.) }
@@ -110,22 +110,26 @@ type
       e.g @code('text/plain').
       @param(AType[in] Media type identifier.)
       @returns(@True if a string represents a media type.) }
-    class function IsValid(const AType: string): Boolean; static; inline;
+    class function IsValid(const AType: string): Boolean; static;
+{$IFNDEF DEBUG}inline;{$ENDIF}
     { Returns @True if a string represents a text media type,
       e.g. @code('text/plain').
       @param(AType[in] Media type identifier.)
       @returns(@True if a string represents a text media type.) }
-    class function IsText(const AType: string): Boolean; static; inline;
+    class function IsText(const AType: string): Boolean; static;
+{$IFNDEF DEBUG}inline;{$ENDIF}
     { Returns @True if a string represents a file extension,
       e.g. @code('text/plain').
       @param(AExt[in] File extension.)
       @returns(@True if a string represents a file extension.) }
-    class function IsExt(const AExt: string): Boolean; static; inline;
+    class function IsExt(const AExt: string): Boolean; static;
+{$IFNDEF DEBUG}inline;{$ENDIF}
     { Normalizes file extension by adding a dot, e.g. a @code('pas') will be
       normalized to @code('.pas').
       @param(AExt[in] File extension.)
       @returns(Normalized file extension.) }
-    class function NormalizeExt(const AExt: string): string; static; inline;
+    class function NormalizeExt(const AExt: string): string; static;
+{$IFNDEF DEBUG}inline;{$ENDIF}
     { Prepares the media types source. }
     procedure Prepare; virtual; abstract;
     { Adds a new media type to the cache.
@@ -300,9 +304,9 @@ type
     function GetHandle: Pointer; override;
     procedure DoOpen; virtual;
     procedure DoClose; virtual;
-    procedure CheckProvider; inline;
-    procedure CheckActive; inline;
-    procedure CheckInactive; inline;
+    procedure CheckProvider; {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure CheckActive; {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure CheckInactive; {$IFNDEF DEBUG}inline;{$ENDIF}
   public
     { Creates an instance of @code(TBrookMIME).
       @param(AOwner[in] Owner component.) }
@@ -310,7 +314,8 @@ type
     { Destroys an instance of @code(TBrookMIME). }
     destructor Destroy; override;
     { Gets a media type class from the classes register. }
-    function GetProviderClass: TBrookMediaTypesClass; inline;
+    function GetProviderClass: TBrookMediaTypesClass;
+{$IFNDEF DEBUG}inline;{$ENDIF}
     { Opens the media types provider. }
     procedure Open;
     { Closes the media types provider. }
