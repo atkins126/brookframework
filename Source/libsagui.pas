@@ -60,11 +60,11 @@ type
 const
   SG_VERSION_MAJOR = 3;
 
-  SG_VERSION_MINOR = 2;
+  SG_VERSION_MINOR = 3;
 
-  SG_VERSION_PATCH = 2;
+  SG_VERSION_PATCH = 0;
 
-  SG_VERSION_HEX = (SG_VERSION_MAJOR shl 16) or (SG_VERSION_MINOR shl 8) or
+  SG_VERSION_HEX = (SG_VERSION_MAJOR shl 16) or (SG_VERSION_MINOR shl 8) or //FI:O803
     SG_VERSION_PATCH;
 
   SG_VERSION_MAJOR_STR = '3';
@@ -431,6 +431,8 @@ var
     max_size: cuint64_t; offset: cuint64_t; const filename: Pcchar;
     downloaded: cbool; status: cuint): cint; cdecl;
 
+  sg_httpres_reset: function(res: Psg_httpres): cint; cdecl;
+
   sg_httpres_clear: function(res: Psg_httpres): cint; cdecl;
 
   sg_httpres_is_empty: function(res: Psg_httpres): cbool; cdecl;
@@ -629,18 +631,18 @@ type
 type
   sg_expr_err_type = cenum;
 const
-  SG_EXPR_ERR_UNKNOWN = 0;
-  SG_EXPR_ERR_UNEXPECTED_NUMBER = 1;
-  SG_EXPR_ERR_UNEXPECTED_WORD = 2;
-  SG_EXPR_ERR_UNEXPECTED_PARENS = 3;
-  SG_EXPR_ERR_MISSING_OPERAND = 4;
-  SG_EXPR_ERR_UNKNOWN_OPERATOR = 5;
-  SG_EXPR_ERR_INVALID_FUNC_NAME = 6;
-  SG_EXPR_ERR_BAD_PARENS = 7;
-  SG_EXPR_ERR_TOO_FEW_FUNC_ARGS = 8;
-  SG_EXPR_ERR_FIRST_ARG_IS_NOT_VAR = 9;
-  SG_EXPR_ERR_BAD_VARIABLE_NAME = 10;
-  SG_EXPR_ERR_BAD_ASSIGNMENT = 11;
+  SG_EXPR_ERR_UNKNOWN = 0; //FI:O803
+  SG_EXPR_ERR_UNEXPECTED_NUMBER = 1; //FI:O803
+  SG_EXPR_ERR_UNEXPECTED_WORD = 2; //FI:O803
+  SG_EXPR_ERR_UNEXPECTED_PARENS = 3; //FI:O803
+  SG_EXPR_ERR_MISSING_OPERAND = 4; //FI:O803
+  SG_EXPR_ERR_UNKNOWN_OPERATOR = 5; //FI:O803
+  SG_EXPR_ERR_INVALID_FUNC_NAME = 6; //FI:O803
+  SG_EXPR_ERR_BAD_PARENS = 7; //FI:O803
+  SG_EXPR_ERR_TOO_FEW_FUNC_ARGS = 8; //FI:O803
+  SG_EXPR_ERR_FIRST_ARG_IS_NOT_VAR = 9; //FI:O803
+  SG_EXPR_ERR_BAD_VARIABLE_NAME = 10; //FI:O803
+  SG_EXPR_ERR_BAD_ASSIGNMENT = 11; //FI:O803
 
 type
   Psg_expr_argument = ^sg_expr_argument;
@@ -1092,6 +1094,7 @@ begin //FI:C101
     sg_httpres_zsendstream2 := GetProcAddress(GHandle, 'sg_httpres_zsendstream2');
     sg_httpres_zsendfile2 := GetProcAddress(GHandle, 'sg_httpres_zsendfile2');
     sg_httpres_zsendfile := GetProcAddress(GHandle, 'sg_httpres_zsendfile');
+    sg_httpres_reset := GetProcAddress(GHandle, 'sg_httpres_reset');
     sg_httpres_clear := GetProcAddress(GHandle, 'sg_httpres_clear');
     sg_httpres_is_empty := GetProcAddress(GHandle, 'sg_httpres_is_empty');
 
@@ -1292,6 +1295,7 @@ begin //FI:C101
     sg_httpres_zsendstream := nil;
     sg_httpres_zsendfile2 := nil;
     sg_httpres_zsendfile := nil;
+    sg_httpres_reset := nil;
     sg_httpres_clear := nil;
     sg_httpres_is_empty := nil;
 

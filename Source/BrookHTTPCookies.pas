@@ -275,7 +275,7 @@ begin
     Result := VEncoder.EncodeBytesToString(
       THashSHA1.GetHMACAsBytes(AUnsignedValue, ASecret))
   finally
-    VEncoder.Destroy;
+    VEncoder.Free;
   end;
 {$ENDIF};
   VPos := Pos('=', Result);
@@ -380,6 +380,7 @@ begin
   case FSameSite of
     ssStrict: Result := Concat(Result, '; SameSite=Strict');
     ssLax: Result := Concat(Result, '; SameSite=Lax');
+    ssNone: ;
   end;
 end;
 

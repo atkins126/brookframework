@@ -346,7 +346,7 @@ end;
 procedure TBrookHTTPRequest.HandleRequestError(ARequest: TBrookHTTPRequest;
   AResponse: TBrookHTTPResponse; AException: Exception);
 begin
-  AResponse.Clear;
+  AResponse.Reset;
   try
     DoRequestError(Self, ARequest, AResponse, AException);
   except
@@ -359,8 +359,9 @@ end;
  {$PUSH}{$WARN 5024 OFF}
 {$ENDIF}
 
-procedure TBrookHTTPRequest.DoRequestError(ASender: TObject;
-  ARequest: TBrookHTTPRequest; AResponse: TBrookHTTPResponse;
+procedure TBrookHTTPRequest.DoRequestError(ASender: TObject; //FI:O804
+  ARequest: TBrookHTTPRequest; //FI:O804
+  AResponse: TBrookHTTPResponse;
   AException: Exception);
 begin
   AResponse.Send(AException.Message, BROOK_CT_TEXT_PLAIN, 500);
