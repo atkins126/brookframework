@@ -1,4 +1,4 @@
-(*   _                     _
+﻿(*   _                     _
  *  | |__  _ __ ___   ___ | | __
  *  | '_ \| '__/ _ \ / _ \| |/ /
  *  | |_) | | | (_) | (_) |   <
@@ -25,16 +25,16 @@
 
 unit Client;
 
-{$MODE DELPHI}
-
 interface
 
 uses
-  SysUtils,
-  Classes,
-  DB,
-  BufDataset,
-  FPHTTPClient;
+  System.SysUtils,
+  System.Classes,
+  Data.DB,
+  System.Net.HTTPClient,
+  FireDAC.Stan.Intf,
+  FireDAC.Comp.Client,
+  FireDAC.Stan.StorageBin;
 
 function NewGuid: string;
 function ListPersons(const AURL: string): TDataSet;
@@ -45,39 +45,45 @@ implementation
 
 function NewGuid: string;
 begin
-  Result := TGuid.NewGuid.ToString(True);
+  Result := TGuid.NewGuid.ToString;
+end;
+
+function CreateDataSet: TFDMemTable;
+begin
+  Result := TFDMemTable.Create(nil);
+  Result.CachedUpdates := True;
 end;
 
 function ListPersons(const AURL: string): TDataSet;
 var
-  VData: TStream;
+  VClient: THTTPClient;
 begin
-  Result := TBufDataset.Create(nil);
-  VData := TBytesStream.Create;
+  Result := CreateDataSet;
+  VClient := THTTPClient.Create;
   try
-    TFPHTTPClient.SimpleGet(AURL, VData);
-    TBufDataset(Result).LoadFromStream(VData, dfBinary);
+    TFDMemTable(Result).LoadFromStream(VClient.Get(AURL).ContentStream, sfBinary);
   finally
-    VData.Free;
+    VClient.Free;
   end;
 end;
 
 procedure SavePersons(const AURL: string; ADataSet: TDataSet);
 var
-  VClient: TFPHTTPClient;
+  VClient: THTTPClient;
+  VData: TStream;
 begin
   if ADataSet.State in dsEditModes then
     ADataSet.Post;
   try
-    VClient := TFPHTTPClient.Create(nil);
-    VClient.RequestBody := TBytesStream.Create;
+    VData := TBytesStream.Create;
+    VClient := THTTPClient.Create;
     try
-      TBufDataset(ADataSet).SaveToStream(VClient.RequestBody, dfBinary);
-      VClient.RequestBody.Seek(0, TSeekOrigin.soBeginning);
-      VClient.Post(AURL);
+      TFDMemTable(ADataSet).SaveToStream(VData, sfBinary);
+      VData.Seek(0, TSeekOrigin.soBeginning);
+      VClient.Post(AURL, VData);
     finally
-      VClient.RequestBody.Free;
       VClient.Free;
+      VData.Free;
     end;
   finally
     FreeAndNil(ADataSet);
@@ -86,9 +92,9 @@ end;
 
 function CreatePersonsDataSet: TDataSet;
 begin
-  Result := TBufDataset.Create(nil);
+  Result := CreateDataSet;
   Result.FieldDefs.Add('name', ftString, 100);
-  TBufDataset(Result).CreateDataSet;
+  TFDMemTable(Result).CreateDataSet;
 end;
 
 end.

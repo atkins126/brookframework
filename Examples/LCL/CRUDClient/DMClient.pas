@@ -23,50 +23,64 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *)
 
-program crudclient;
+unit DMClient;
 
 {$MODE DELPHI}
-{$WARN 4046 OFF}
-{$WARN 5062 OFF}
+
+interface
 
 uses
   DB,
-  Client;
+  Classes,
+  BufDataset,
+  FPHTTPClient;
 
-const
-  URL_SERVER = 'http://localhost:8080';
+type
+  TClient = class(TDataModule)
+    BufDataset: TBufDataset;
+  public
+    procedure LoadPersons(const AURL: string);
+    procedure SavePersons(const AURL: string);
+  end;
 
-procedure ListAllPersons;
+var
+  Client: TClient;
+
+implementation
+
+{$R *.lfm}
+
+procedure TClient.LoadPersons(const AURL: string);
+var
+  VData: TStream;
 begin
-  with ListPersons(URL_SERVER) do
+  VData := TBytesStream.Create;
   try
-    while not EOF do
-    begin
-      WriteLn(FieldByName('id').AsInteger, ' ', FieldByName('name').AsString);
-      Next;
-    end;
+    TFPHTTPClient.SimpleGet(AURL, VData);
+    VData.Seek(0, TSeekOrigin.soBeginning);
+    BufDataset.Close;
+    BufDataset.LoadFromStream(VData, dfBinary);
   finally
-    Free;
+    VData.Free;
   end;
 end;
 
-procedure AddRandomPersons;
+procedure TClient.SavePersons(const AURL: string);
 var
-  VDataSet: TDataSet;
-  VField: TField;
+  VClient: TFPHTTPClient;
 begin
-  VDataSet := CreatePersonsDataSet;
-  VField := VDataSet.FieldByName('name');
-  VDataSet.Append;
-  VField.AsString := 'Person ' + NewGuid;
-  VDataSet.Append;
-  VField.AsString := 'Person ' + NewGuid;
-  SavePersons(URL_SERVER, VDataSet);
+  if BufDataset.State in dsEditModes then
+    BufDataset.Post;
+  VClient := TFPHTTPClient.Create(nil);
+  VClient.RequestBody := TBytesStream.Create;
+  try
+    BufDataset.SaveToStream(VClient.RequestBody, dfBinary);
+    VClient.RequestBody.Seek(0, TSeekOrigin.soBeginning);
+    VClient.Post(AURL);
+  finally
+    VClient.RequestBody.Free;
+    VClient.Free;
+  end;
 end;
 
-begin
-  Randomize;
-  ListAllPersons;
-  AddRandomPersons;
-  ListAllPersons;
 end.

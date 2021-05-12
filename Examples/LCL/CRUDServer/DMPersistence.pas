@@ -23,50 +23,59 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *)
 
-program crudclient;
+unit DMPersistence;
 
 {$MODE DELPHI}
-{$WARN 4046 OFF}
-{$WARN 5062 OFF}
+
+interface
 
 uses
-  DB,
-  Client;
+  SysUtils,
+  Classes,
+  SQLDB,
+  BufDataset,
+  SQLite3Conn;
 
-const
-  URL_SERVER = 'http://localhost:8080';
+type
+  TPersistence = class(TDataModule)
+    SQLConnector: TSQLConnector;
+    SQLQuery: TSQLQuery;
+    SQLTransaction: TSQLTransaction;
+  public
+    function ListPersons: TStream;
+    procedure SavePersons(const ABytes: TBytes);
+  end;
 
-procedure ListAllPersons;
+var
+  Persistence: TPersistence;
+
+implementation
+
+{$R *.lfm}
+
+function TPersistence.ListPersons: TStream;
 begin
-  with ListPersons(URL_SERVER) do
+  Result := TBytesStream.Create;
+  SQLQuery.Close;
+  SQLQuery.Open;
+  SQLQuery.SaveToStream(Result, dfBinary);
+  Result.Seek(0, TSeekOrigin.soBeginning);
+end;
+
+procedure TPersistence.SavePersons(const ABytes: TBytes);
+var
+  VData: TBytesStream;
+begin
+  VData := TBytesStream.Create(ABytes);
   try
-    while not EOF do
-    begin
-      WriteLn(FieldByName('id').AsInteger, ' ', FieldByName('name').AsString);
-      Next;
-    end;
+    SQLQuery.Close;
+    SQLQuery.Prepare;
+    SQLQuery.LoadFromStream(VData, dfBinary);
+    SQLQuery.ApplyUpdates;
+    SQLTransaction.Commit;
   finally
-    Free;
+    VData.Free;
   end;
 end;
 
-procedure AddRandomPersons;
-var
-  VDataSet: TDataSet;
-  VField: TField;
-begin
-  VDataSet := CreatePersonsDataSet;
-  VField := VDataSet.FieldByName('name');
-  VDataSet.Append;
-  VField.AsString := 'Person ' + NewGuid;
-  VDataSet.Append;
-  VField.AsString := 'Person ' + NewGuid;
-  SavePersons(URL_SERVER, VDataSet);
-end;
-
-begin
-  Randomize;
-  ListAllPersons;
-  AddRandomPersons;
-  ListAllPersons;
 end.

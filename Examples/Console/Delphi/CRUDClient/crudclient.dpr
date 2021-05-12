@@ -1,4 +1,4 @@
-(*   _                     _
+﻿(*   _                     _
  *  | |__  _ __ ___   ___ | | __
  *  | '_ \| '__/ _ \ / _ \| |/ /
  *  | |_) | | | (_) | (_) |   <
@@ -25,12 +25,12 @@
 
 program crudclient;
 
-{$MODE DELPHI}
-{$WARN 4046 OFF}
-{$WARN 5062 OFF}
+{$IFDEF MSWINDOWS}
+ {$APPTYPE CONSOLE}
+{$ENDIF}
 
 uses
-  DB,
+  Data.DB,
   Client;
 
 const
@@ -65,7 +65,6 @@ begin
 end;
 
 begin
-  Randomize;
   ListAllPersons;
   AddRandomPersons;
   ListAllPersons;

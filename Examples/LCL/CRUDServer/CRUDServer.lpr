@@ -23,50 +23,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *)
 
-program crudclient;
+program CRUDServer;
 
 {$MODE DELPHI}
-{$WARN 4046 OFF}
-{$WARN 5062 OFF}
 
 uses
-  DB,
-  Client;
+{$IFDEF UNIX}
+  CThreads,
+{$ENDIF}
+  Interfaces,
+  Forms,
+  frmMain,
+  DMPersistence;
 
-const
-  URL_SERVER = 'http://localhost:8080';
-
-procedure ListAllPersons;
-begin
-  with ListPersons(URL_SERVER) do
-  try
-    while not EOF do
-    begin
-      WriteLn(FieldByName('id').AsInteger, ' ', FieldByName('name').AsString);
-      Next;
-    end;
-  finally
-    Free;
-  end;
-end;
-
-procedure AddRandomPersons;
-var
-  VDataSet: TDataSet;
-  VField: TField;
-begin
-  VDataSet := CreatePersonsDataSet;
-  VField := VDataSet.FieldByName('name');
-  VDataSet.Append;
-  VField.AsString := 'Person ' + NewGuid;
-  VDataSet.Append;
-  VField.AsString := 'Person ' + NewGuid;
-  SavePersons(URL_SERVER, VDataSet);
-end;
+{$R *.res}
 
 begin
-  Randomize;
-  ListAllPersons;
-  AddRandomPersons;
-  ListAllPersons;
+  Application.Scaled := True;
+  RequireDerivedFormResource := True;
+  Application.Initialize;
+  Application.CreateForm(TPersistence, Persistence);
+  Application.CreateForm(TfrMain, frMain);
+  Application.Run;
 end.
+

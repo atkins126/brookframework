@@ -1,4 +1,4 @@
-(*   _                     _
+﻿(*   _                     _
  *  | |__  _ __ ___   ___ | | __
  *  | '_ \| '__/ _ \ / _ \| |/ /
  *  | |_) | | | (_) | (_) |   <
@@ -23,50 +23,44 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *)
 
-program crudclient;
+program crudserver;
 
-{$MODE DELPHI}
-{$WARN 4046 OFF}
-{$WARN 5062 OFF}
+{$IFDEF MSWINDOWS}
+ {$APPTYPE CONSOLE}
+{$ENDIF}
 
 uses
-  DB,
-  Client;
+  BrookHTTPRequest,
+  BrookHTTPResponse,
+  BrookHTTPServer,
+  Persistence;
 
-const
-  URL_SERVER = 'http://localhost:8080';
+type
+  THTTPServer = class(TBrookHTTPServer)
+  protected
+    procedure DoRequest(ASender: TObject; ARequest: TBrookHTTPRequest;
+      AResponse: TBrookHTTPResponse); override;
+  end;
 
-procedure ListAllPersons;
+procedure THTTPServer.DoRequest(ASender: TObject; ARequest: TBrookHTTPRequest;
+  AResponse: TBrookHTTPResponse);
 begin
-  with ListPersons(URL_SERVER) do
+  if ARequest.Payload.Length > 0 then
+    SavePersons(ARequest.Payload.Content)
+  else
+    AResponse.SendStream(ListPersons, 200);
+end;
+
+begin
+  with THTTPServer.Create(nil) do
   try
-    while not EOF do
-    begin
-      WriteLn(FieldByName('id').AsInteger, ' ', FieldByName('name').AsString);
-      Next;
-    end;
+    Port := 8080;
+    Open;
+    if not Active then
+      Exit;
+    WriteLn('Server running at http://localhost:', Port);
+    ReadLn;
   finally
     Free;
   end;
-end;
-
-procedure AddRandomPersons;
-var
-  VDataSet: TDataSet;
-  VField: TField;
-begin
-  VDataSet := CreatePersonsDataSet;
-  VField := VDataSet.FieldByName('name');
-  VDataSet.Append;
-  VField.AsString := 'Person ' + NewGuid;
-  VDataSet.Append;
-  VField.AsString := 'Person ' + NewGuid;
-  SavePersons(URL_SERVER, VDataSet);
-end;
-
-begin
-  Randomize;
-  ListAllPersons;
-  AddRandomPersons;
-  ListAllPersons;
 end.

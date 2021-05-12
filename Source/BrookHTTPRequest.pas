@@ -1,4 +1,4 @@
-(*  _                     _
+﻿(*  _                     _
  * | |__  _ __ ___   ___ | | __
  * | '_ \| '__/ _ \ / _ \| |/ /
  * | |_) | | | (_) | (_) |   <
@@ -73,6 +73,7 @@ type
     FVersion: string;
     FMethod: string;
     FPath: string;
+    FIsIsolated: Boolean;
     FIsUploading: Boolean;
     FClient: Pointer;
     FTLSSession: Pointer;
@@ -82,6 +83,7 @@ type
     function GetContentType: string; {$IFNDEF DEBUG}inline;{$ENDIF}
     function GetReferer: string; {$IFNDEF DEBUG}inline;{$ENDIF}
     function GetUserAgent: string; {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure SetIsIsolated(AValue: Boolean); {$IFNDEF DEBUG}inline;{$ENDIF}
   protected
     class procedure DoRequestIsolatedProcCallback(Acls: Pcvoid;
       Areq: Psg_httpreq; Ares: Psg_httpres); cdecl; static;
@@ -165,6 +167,9 @@ type
     property Referer: string read GetReferer;
     { Contains the levels of the path component. }
     property Paths: TArray<string> read GetPaths;
+    { Checks if the request was isolated from the main event loop to an own
+      dedicated thread. }
+    property IsIsolated: Boolean read FIsIsolated;
     { Checks if the client is uploading data. }
     property IsUploading: Boolean read FIsUploading;
     { List of the uploaded files. }
@@ -376,6 +381,11 @@ begin
   Result := FHandle;
 end;
 
+procedure TBrookHTTPRequest.SetIsIsolated(AValue: Boolean);
+begin
+  FIsIsolated := AValue;
+end;
+
 function TBrookHTTPRequest.GetIP: string;
 var
   P: array[0..45] of cchar;
@@ -441,6 +451,7 @@ var
   VHolder: TBrookHTTPReqIsolatedProcHolder<TBrookHTTPRequestIsolatedProc>;
 begin
   SgLib.Check;
+  SetIsIsolated(True);
   VHolder := TBrookHTTPReqIsolatedProcHolder<
     TBrookHTTPRequestIsolatedProc>.Create(AProc, AUserData);
   try
@@ -461,6 +472,7 @@ var
     TBrookHTTPRequestIsolatedAnonymousProc>;
 begin
   SgLib.Check;
+  SetIsIsolated(True);
   VHolder := TBrookHTTPReqIsolatedProcHolder<
     TBrookHTTPRequestIsolatedAnonymousProc>.Create(AProc, AUserData);
   try

@@ -23,50 +23,53 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *)
 
-program crudclient;
+unit frmMain;
 
 {$MODE DELPHI}
-{$WARN 4046 OFF}
-{$WARN 5062 OFF}
+
+interface
 
 uses
+  Classes,
   DB,
-  Client;
+  StdCtrls,
+  ExtCtrls,
+  DBGrids,
+  DBCtrls,
+  Forms,
+  DMClient;
 
 const
   URL_SERVER = 'http://localhost:8080';
 
-procedure ListAllPersons;
-begin
-  with ListPersons(URL_SERVER) do
-  try
-    while not EOF do
-    begin
-      WriteLn(FieldByName('id').AsInteger, ' ', FieldByName('name').AsString);
-      Next;
-    end;
-  finally
-    Free;
+type
+  TfrMain = class(TForm)
+    btLoad: TButton;
+    btSave: TButton;
+    DataSource: TDataSource;
+    DBGrid: TDBGrid;
+    DBNavigator: TDBNavigator;
+    pnBottom: TPanel;
+    procedure btLoadClick(Sender: TObject);
+    procedure btSaveClick(Sender: TObject);
   end;
-end;
 
-procedure AddRandomPersons;
 var
-  VDataSet: TDataSet;
-  VField: TField;
+  frMain: TfrMain;
+
+implementation
+
+{$R *.lfm}
+
+procedure TfrMain.btLoadClick(Sender: TObject);
 begin
-  VDataSet := CreatePersonsDataSet;
-  VField := VDataSet.FieldByName('name');
-  VDataSet.Append;
-  VField.AsString := 'Person ' + NewGuid;
-  VDataSet.Append;
-  VField.AsString := 'Person ' + NewGuid;
-  SavePersons(URL_SERVER, VDataSet);
+  Client.LoadPersons(URL_SERVER);
+  btSave.Enabled := DataSource.DataSet.RecordCount > 0;
 end;
 
+procedure TfrMain.btSaveClick(Sender: TObject);
 begin
-  Randomize;
-  ListAllPersons;
-  AddRandomPersons;
-  ListAllPersons;
+  Client.SavePersons(URL_SERVER);
+end;
+
 end.
